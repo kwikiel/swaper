@@ -9,10 +9,12 @@ import config
 class BitapiException(Exception): pass
 
 def bitapi(method, **params):
+    """Main method for bitmarket API"""
     times = int(time.time())
     params.update({
         "method": method,
-        "tonce": times
+        "tonce": times,
+        "currency": "BTC"
         })
 
     post = urllib.urlencode(params)
@@ -26,5 +28,12 @@ def bitapi(method, **params):
     return raw.json()
 
 def get_cutoff():
+    """Returns max profit for swaps """
     raw = requests.get("http://bitmarket.pl/json/swapBTC/swap.json")
     return raw.json()["cutoff"]
+
+def cancel_all():
+    """Powerful: cancels all open swaps """
+    swap_list = bitapi("swapList")["data"]
+    for swap in swap_list:
+        bitapi("swapClose", id=swap["id"])

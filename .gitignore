@@ -1,3 +1,4 @@
 config.py
 *.swp
 *.py[oc]
+swaper/
