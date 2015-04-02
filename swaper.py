@@ -35,5 +35,10 @@ def get_cutoff():
 def cancel_all():
     """Powerful: cancels all open swaps """
     swap_list = bitapi("swapList")["data"]
+    
     for swap in swap_list:
         bitapi("swapClose", id=swap["id"])
+
+def make_best():
+    #Uses magic contant, remove later.
+    print bitapi('swapOpen', amount=7, rate=int(get_cutoff()))
