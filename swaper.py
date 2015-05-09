@@ -10,54 +10,59 @@ import config
 class BitapiException(Exception):
     pass
 
+class Yolo():
 
-def bitapi(method, **params):
-    """Main method for bitmarket API"""
-    endpoint = "https://www.bitmarket.pl/api2/"
-    times = int(time.time())
-    params.update({
-        "method": method,
-        "tonce": times,
-        "currency": "BTC"
-        })
+    def __init__(self, key=config.key, secret=config.secret):
+        self.key = key
+        self.secret = secret
 
-    post = urllib.urlencode(params)
-    sign = hmac.HMAC(config.secret, post, digestmod=hashlib.sha512).hexdigest()
-    headers = {"API-Key": config.key, "API-Hash": sign}
-    raw = requests.post(endpoint, data=post, headers=headers)
+    def bitapi(self, method, **params):
+        """Main method for bitmarket API"""
+        endpoint = "https://www.bitmarket.pl/api2/"
+        times = int(time.time())
+        params.update({
+            "method": method,
+            "tonce": times,
+            "currency": "BTC"
+            })
 
-    if 'error' in raw.json():
-        raise BitapiException(raw.json())
-    return raw.json()
+        post = urllib.urlencode(params)
+        sign = hmac.HMAC(self.secret, post, digestmod=hashlib.sha512).hexdigest()
+        headers = {"API-Key": self.key, "API-Hash": sign}
+        raw = requests.post(endpoint, data=post, headers=headers)
 
-
-def get_cutoff():
-    """Returns max profit for swaps """
-    raw = requests.get("http://bitmarket.pl/json/swapBTC/swap.json")
-    return raw.json()["cutoff"]
-
-
-def cancel_all():
-    """Powerful: cancels all open swaps """
-    swap_list = bitapi("swapList")["data"]
-
-    for swap in swap_list:
-        bitapi("swapClose", id=swap["id"])
+        if 'error' in raw.json():
+            raise BitapiException(raw.json())
+        return raw.json()
 
 
-def make_best():
-    # Uses magic contant, remove later.
-    return bitapi('swapOpen', amount=(float(get_balance())-0.01), rate=float(get_cutoff()-0.05))
+    def get_cutoff(self):
+        """Returns max profit for swaps """
+        raw = requests.get("http://bitmarket.pl/json/swapBTC/swap.json")
+        return raw.json()["cutoff"]
 
 
-def swap_list():
-    """Listing all open offers with nice interface"""
-    swap_list_data = bitapi("swapList")["data"]
-    return swap_list_data
+    def cancel_all(self):
+        """Powerful: cancels all open swaps """
+        swap_list = bitapi("swapList")["data"]
+
+        for swap in swap_list:
+            bitapi("swapClose", id=swap["id"])
 
 
-def get_info():
-    return bitapi('info')
+    def make_best(self):
+        # Uses magic contant, remove later.
+        return self.bitapi('swapOpen', amount=(float(get_balance())-0.01), rate=float(get_cutoff()-0.05))
 
-def get_balance():
-    return bitapi('info')['data']['balances']['available']['BTC']
+
+    def swap_list(self):
+        """Listing all open offers with nice interface"""
+        swap_list_data = self.bitapi("swapList")["data"]
+        return swap_list_data
+
+
+    def get_info(self):
+        return self.bitapi('info')
+
+    def get_balance(self):
+        return self.bitapi('info')['data']['balances']['available']['BTC']
